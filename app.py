@@ -77,7 +77,6 @@ class ServiceEstimator(ctk.CTk):
         self.global_total_label.pack(side="left", anchor="w")
 
 
-
         calculate_btn = ctk.CTkButton(
             self.scrollable_frame,
             text="Calculate Total",
@@ -86,6 +85,25 @@ class ServiceEstimator(ctk.CTk):
             command=self.calculate_total
         )
         calculate_btn.pack(pady=10, padx=20, anchor="w")
+
+        self.help_button = ctk.CTkButton(
+            self,
+            text="?",
+            fg_color="#2B2B2B",
+            hover_color="#2B2B2B",
+            width=40,
+            height=40,
+            corner_radius=0, 
+            font=ctk.CTkFont(size=18, weight="bold"),
+            command=self.open_about_window
+        )
+
+        self.help_button.place(relx=1.0, rely=1.0, anchor="se", x=-20, y=-20)
+
+        self.window_section.toggle()
+        self.gutter_section.toggle()
+
+
 
     # ------------------ SECTION CREATION ------------------ #
 
@@ -205,6 +223,47 @@ class ServiceEstimator(ctk.CTk):
         )
         copy_btn.grid(row=2, column=1, padx=5, pady=10, sticky="w")
 
+
+    # ------------------ ABOUT WINDOW ------------------ #
+
+    def open_about_window(self):
+        about_window = ctk.CTkToplevel(self)
+        about_window.title("About")
+        about_window.geometry("400x300")
+        about_window.grab_set()  
+
+        title = ctk.CTkLabel(
+            about_window,
+            text="About the Tool",
+            font=ctk.CTkFont(size=20, weight="bold")
+        )
+        title.pack(pady=15, anchor="w", padx=20)
+
+        info_text = (
+            "Service Estimator App\n\n"
+            "Created by: Nathan Aruna\n"
+            "Built to simplify the estimating of job costs while on sales calls.\n\n"
+            "Length multipliers are hard coded in this version :(\n\n"
+
+            "Version 1.0\n"
+            "2026"
+        )
+
+        info_label = ctk.CTkLabel(
+            about_window,
+            text=info_text,
+            justify="left",
+            wraplength=350
+        )
+        info_label.pack(padx=20, pady=10, anchor="w")
+
+        close_button = ctk.CTkButton(
+            about_window,
+            text="Close",
+            command=about_window.destroy
+        )
+        close_button.pack(pady=15, anchor="w", padx=20)
+
     # ------------------ CALCULATION & COPY ------------------ #
     def calculate_total(self):
         total = 0
@@ -247,5 +306,6 @@ class ServiceEstimator(ctk.CTk):
 
 
 if __name__ == "__main__":
+    
     app = ServiceEstimator()
     app.mainloop()

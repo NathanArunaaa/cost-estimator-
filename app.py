@@ -62,6 +62,7 @@ class ServiceEstimator(ctk.CTk):
         title.pack(pady=20, padx=20, anchor="w")
 
         self.create_window_section()
+        self.create_pressure_washing_section()
         self.create_gutter_section()
         self.create_guard_section()
         self.create_polymeric_section()
@@ -109,6 +110,53 @@ class ServiceEstimator(ctk.CTk):
 
     def create_window_section(self):
         self.window_section = CollapsibleSection(self.scrollable_frame, "🪟 Window Cleaning")
+        self.window_section.pack(fill="x", padx=20, pady=10)
+
+        self.window_section.content.grid_columnconfigure(0, weight=1)
+        self.window_section.content.grid_columnconfigure(1, weight=0)
+
+        self.window_size = ctk.StringVar(value="")
+
+        self.window_prices = {
+            "Small": (250, 350),
+            "Medium": (350, 450),
+            "Large": (450, 600),
+            "X-Large": (600, 900)
+        }
+
+        row = 0
+        for size in self.window_prices:
+
+            radio = ctk.CTkRadioButton(
+                self.window_section.content,
+                text=size,
+                variable=self.window_size,
+                value=size,
+                command=self.calculate_total
+            )
+            radio.grid(row=row, column=0, padx=10, pady=5, sticky="w")
+
+            row += 1
+
+        self.window_total = ctk.CTkLabel(
+            self.window_section.content,
+            text="Section Total: $0 - $0"
+        )
+        self.window_total.grid(row=row, column=0, padx=10, pady=10, sticky="w")
+
+        copy_btn = ctk.CTkButton(
+            self.window_section.content,
+            text="⌃",
+            width=10,
+            height=25,
+            font=ctk.CTkFont(size=12),
+            command=lambda: self.copy_to_clipboard(self.window_total.cget("text"))
+        )
+        copy_btn.grid(row=row, column=1, padx=5, pady=10, sticky="w")
+
+
+    def create_pressure_washing_section(self):
+        self.window_section = CollapsibleSection(self.scrollable_frame, "💧 Pressure Washing")
         self.window_section.pack(fill="x", padx=20, pady=10)
 
         self.window_section.content.grid_columnconfigure(0, weight=1)

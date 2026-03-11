@@ -112,19 +112,36 @@ class ServiceEstimator(ctk.CTk):
         self.window_section.pack(fill="x", padx=20, pady=10)
 
         self.window_section.content.grid_columnconfigure(0, weight=1)
-        self.window_section.content.grid_columnconfigure(1, weight=1)
-        self.window_section.content.grid_columnconfigure(2, weight=0)
+        self.window_section.content.grid_columnconfigure(1, weight=0)
 
-        ctk.CTkLabel(self.window_section.content, text="Number of Windows:").grid(row=0, column=0, padx=10, pady=5, sticky="w")
-        self.window_count = ctk.CTkEntry(self.window_section.content)
-        self.window_count.grid(row=0, column=1, padx=10, pady=5, sticky="ew")
+        self.window_size = ctk.StringVar(value="")
 
-        ctk.CTkLabel(self.window_section.content, text="Price per Window ($):").grid(row=1, column=0, padx=10, pady=5, sticky="w")
-        self.window_price = ctk.CTkEntry(self.window_section.content)
-        self.window_price.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
+        self.window_prices = {
+            "Small": (250, 350),
+            "Medium": (350, 450),
+            "Large": (450, 600),
+            "X-Large": (600, 900)
+        }
 
-        self.window_total = ctk.CTkLabel(self.window_section.content, text="Section Total: $0.00")
-        self.window_total.grid(row=2, column=0, padx=10, pady=10, sticky="w")
+        row = 0
+        for size in self.window_prices:
+
+            radio = ctk.CTkRadioButton(
+                self.window_section.content,
+                text=size,
+                variable=self.window_size,
+                value=size,
+                command=self.calculate_total
+            )
+            radio.grid(row=row, column=0, padx=10, pady=5, sticky="w")
+
+            row += 1
+
+        self.window_total = ctk.CTkLabel(
+            self.window_section.content,
+            text="Section Total: $0 - $0"
+        )
+        self.window_total.grid(row=row, column=0, padx=10, pady=10, sticky="w")
 
         copy_btn = ctk.CTkButton(
             self.window_section.content,
@@ -134,7 +151,7 @@ class ServiceEstimator(ctk.CTk):
             font=ctk.CTkFont(size=12),
             command=lambda: self.copy_to_clipboard(self.window_total.cget("text"))
         )
-        copy_btn.grid(row=2, column=1, padx=5, pady=10, sticky="w")
+        copy_btn.grid(row=row, column=1, padx=5, pady=10, sticky="w")
 
     def create_gutter_section(self):
         self.gutter_section = CollapsibleSection(self.scrollable_frame, "🍃 Gutter Cleaning")
@@ -144,16 +161,23 @@ class ServiceEstimator(ctk.CTk):
         self.gutter_section.content.grid_columnconfigure(1, weight=1)
         self.gutter_section.content.grid_columnconfigure(2, weight=0)
 
-        ctk.CTkLabel(self.gutter_section.content, text="Linear Feet:").grid(row=0, column=0, padx=10, pady=5, sticky="w")
-        self.gutter_length = ctk.CTkEntry(self.gutter_section.content)
-        self.gutter_length.grid(row=0, column=1, padx=10, pady=5, sticky="ew")
+        ctk.CTkLabel(self.gutter_section.content, text="1st Floor (ft):").grid(row=0, column=0, padx=10, pady=5, sticky="w")
+        self.gutter_length1 = ctk.CTkEntry(self.gutter_section.content)
+        self.gutter_length1.grid(row=0, column=1, padx=10, pady=5, sticky="ew")
 
-        ctk.CTkLabel(self.gutter_section.content, text="Price per Foot ($):").grid(row=1, column=0, padx=10, pady=5, sticky="w")
-        self.gutter_price = ctk.CTkEntry(self.gutter_section.content)
-        self.gutter_price.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
+        ctk.CTkLabel(self.gutter_section.content, text="2nd Floor (ft):").grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        self.gutter_length2 = ctk.CTkEntry(self.gutter_section.content)
+        self.gutter_length2.grid(row=1, column=1, padx=10, pady=5, sticky="ew")
+
+        ctk.CTkLabel(self.gutter_section.content, text="3rd Floor (ft):").grid(row=2, column=0, padx=10, pady=5, sticky="w")
+        self.gutter_length3 = ctk.CTkEntry(self.gutter_section.content)
+        self.gutter_length3.grid(row=2, column=1, padx=10, pady=5, sticky="ew")
 
         self.gutter_total = ctk.CTkLabel(self.gutter_section.content, text="Section Total: $0.00")
-        self.gutter_total.grid(row=2, column=0, padx=10, pady=10, sticky="w")
+        self.gutter_total.grid(row=3, column=0, padx=10, pady=10, sticky="w")
+
+        self.footage_total = ctk.CTkLabel(self.gutter_section.content, text="Linear Footage: 0 ft")
+        self.footage_total.grid(row=3, column=1, padx=50, pady=10, sticky="w")
 
         copy_btn = ctk.CTkButton(
             self.gutter_section.content,
@@ -163,7 +187,7 @@ class ServiceEstimator(ctk.CTk):
             font=ctk.CTkFont(size=12),
             command=lambda: self.copy_to_clipboard(self.gutter_total.cget("text"))
         )
-        copy_btn.grid(row=2, column=1, padx=5, pady=10, sticky="w")
+        copy_btn.grid(row=3, column=1, padx=5, pady=10, sticky="w")
 
     def create_guard_section(self):
         self.guard_section = CollapsibleSection(self.scrollable_frame, "🛡️ Gutter Guard Installation")
@@ -267,36 +291,60 @@ class ServiceEstimator(ctk.CTk):
     # ------------------ CALCULATION & COPY ------------------ #
     def calculate_total(self):
         total = 0
-        try:
-            if self.window_section.checkbox_var.get():
-                w = float(self.window_count.get()) * float(self.window_price.get())
-                self.window_total.configure(text=f"Section Total: ${w:,.2f}")
-                total += w
-            else:
-                self.window_total.configure(text="Section Total: $0.00")
 
+        try:
+
+            selected_size = self.window_size.get()
+
+            if selected_size in self.window_prices:
+
+                low, high = self.window_prices[selected_size]
+
+                self.window_total.configure(
+                    text=f"Section Total: ${low:,.0f} - ${high:,.0f}"
+                )
+
+            if self.window_section.checkbox_var.get():
+                total += (low + high) / 2
+
+            else:
+                self.window_total.configure(text="Section Total: $0 - $0")
+
+
+            # -------- GUTTER CLEANING --------
             if self.gutter_section.checkbox_var.get():
                 g = float(self.gutter_length.get()) * float(self.gutter_price.get())
                 self.gutter_total.configure(text=f"Section Total: ${g:,.2f}")
                 total += g
+
             else:
                 self.gutter_total.configure(text="Section Total: $0.00")
 
+            # -------- GUTTER GUARD --------
             if self.guard_section.checkbox_var.get():
                 guard = float(self.guard_length.get()) * float(self.guard_price.get())
                 self.guard_total.configure(text=f"Section Total: ${guard:,.2f}")
                 total += guard
+
             else:
                 self.guard_total.configure(text="Section Total: $0.00")
 
+
+            # -------- POLYMERIC SAND --------
             if self.poly_section.checkbox_var.get():
                 p = float(self.poly_sqft.get()) * float(self.poly_price.get())
                 self.poly_total.configure(text=f"Section Total: ${p:,.2f}")
                 total += p
+
             else:
                 self.poly_total.configure(text="Section Total: $0.00")
 
-            self.global_total_label.configure(text=f"TOTAL ESTIMATE: ${total:,.2f}")
+
+            # -------- GLOBAL TOTAL --------
+            self.global_total_label.configure(
+                text=f"TOTAL ESTIMATE: ${total:,.2f}"
+            )
+
         except ValueError:
             self.global_total_label.configure(text="Please enter valid numbers.")
 
